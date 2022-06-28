@@ -33,7 +33,7 @@ type Request struct {
 
 type Record struct {
 	AwsRegion    string  `json:"awsRegion"`
-	EventName    string  `json:"eventName"`
+	EventName    string  `json:"eventName"` // "ObjectCreated:Put" or "ObjectRemoved:Delete"
 	EventTime    string  `json:"eventTime"` // The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when Amazon S3 finished processing the request
 	EventSource  string  `json:"eventSource"`
 	Request      Request `json:"requestParameters"`

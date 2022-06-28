@@ -28,3 +28,12 @@ resource "aws_iam_role_policy_attachment" "AWSLambdaExecute-attach" {
   role       = aws_iam_role.iam_for_terraform_lambda.id
   policy_arn = data.aws_iam_policy.AWSLambdaExecute.arn
 }
+
+data "aws_iam_policy" "AmazonAthenaFullAccess" {
+  arn = "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonAthenaFullAccess-attach" {
+  role       = aws_iam_role.iam_for_terraform_lambda.id
+  policy_arn = data.aws_iam_policy.AmazonAthenaFullAccess.arn
+}

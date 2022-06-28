@@ -17,7 +17,7 @@ resource "random_pet" "underscore" {
 }
 
 resource "random_pet" "dash" {
-  length    = 2
+  length = 2
 }
 
 module "s3update_function" {

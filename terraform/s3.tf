@@ -23,9 +23,21 @@ resource "aws_s3_bucket_notification" "aws_lambda_trigger" {
   bucket = aws_s3_bucket.bucket.id
   lambda_function {
     lambda_function_arn = module.s3update_function.function.arn
-    events              = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    events              = ["s3:ObjectCreated:*"]
   }
   depends_on = [
     aws_lambda_permission.lambda_s3_permission
+  ]
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.bucket.id
+  key    = "queries/create_ccindex.athena"
+  source = "create_ccindex.athena"
+
+  etag = filemd5("create_ccindex.athena")
+  depends_on = [
+    aws_s3_bucket_notification.aws_lambda_trigger,
+    module.s3update_function.function,
   ]
 }
