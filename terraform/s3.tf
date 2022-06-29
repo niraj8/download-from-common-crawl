@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "bucket" {
-  bucket = "${terraform.workspace}-common-crawl-query-${random_pet.dash.id}"
+  bucket = "${terraform.workspace}-common-crawl-query-${random_pet.one.id}-${random_pet.two.id}"
 
   tags = {
     environment = terraform.workspace

@@ -1,4 +1,4 @@
-package main
+package types
 
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-content-structure.html
 

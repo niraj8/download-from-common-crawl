@@ -6,8 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"example.com/s3update/types"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
-	"github.com/aws/aws-sdk-go-v2/service/athena/types"
+	athenaTypes "github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -15,15 +16,15 @@ func StartQueryExecution(
 	ctx context.Context,
 	athenaClient *athena.Client,
 	s3Client *s3.Client,
-	record Record,
+	s3Record types.S3,
 	strContent string,
 ) error {
-	outputLocation := fmt.Sprintf("s3://%s/results", record.S3.Bucket.Name)
+	outputLocation := fmt.Sprintf("s3://%s/results", s3Record.Bucket.Name)
 	queryStartResult, err := athenaClient.StartQueryExecution(
 		ctx,
 		&athena.StartQueryExecutionInput{
 			QueryString: &strContent,
-			ResultConfiguration: &types.ResultConfiguration{
+			ResultConfiguration: &athenaTypes.ResultConfiguration{
 				OutputLocation: &outputLocation,
 			},
 		},
@@ -33,13 +34,13 @@ func StartQueryExecution(
 	}
 
 	queryStartId := fmt.Sprintf("query_start/%s.txt", *queryStartResult.QueryExecutionId)
-	body := fmt.Sprintf("%s\n%s", record.S3.Object.Key, strContent)
+	body := fmt.Sprintf("%s\n%s", s3Record.Object.Key, strContent)
 	log.Printf("queryStartId: %s", queryStartId)
 	_, err = s3Client.PutObject(
 		ctx,
 		&s3.PutObjectInput{
 			Body:   strings.NewReader(body),
-			Bucket: &record.S3.Bucket.Name,
+			Bucket: &s3Record.Bucket.Name,
 			Key:    &queryStartId,
 		},
 	)
@@ -53,14 +54,27 @@ func StartQueryExecution(
 func StartRepairTable(
 	ctx context.Context,
 	s3Client *s3.Client,
-	bucketName string,
+	record types.Record,
 ) error {
-	queryKey := "queries/msck_repair_table_ccindex.athena"
-	_, err := s3Client.PutObject(
+	queryStartKey := strings.Split(record.S3.Object.Key, "/")[1]
+	queryStartKey = fmt.Sprintf("query_start/%s", queryStartKey)
+	content, err := GetObject(ctx, s3Client, record.S3.Bucket.Name, queryStartKey)
+	if err != nil {
+		log.Fatalf("unable to get %s object, %v", queryStartKey, err)
+	}
+
+	queryKey := string(content)
+	queryKey = strings.Split(queryKey, "\n")[0]
+	if queryKey != "queries/create_ccindex.athena" {
+		return nil
+	}
+
+	queryKey = "queries/msck_repair_table_ccindex.athena"
+	_, err = s3Client.PutObject(
 		ctx,
 		&s3.PutObjectInput{
 			Body:   strings.NewReader("MSCK REPAIR TABLE ccindex"),
-			Bucket: &bucketName,
+			Bucket: &record.S3.Bucket.Name,
 			Key:    &queryKey,
 		},
 	)

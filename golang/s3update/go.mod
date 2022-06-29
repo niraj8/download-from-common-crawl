@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.11
 	github.com/aws/aws-sdk-go-v2/service/athena v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.11
+	github.com/gocarina/gocsv v0.0.0-20220629092026-72f2e845d8d1
 )
 
 require (

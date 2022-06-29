@@ -2,17 +2,17 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
+	"example.com/s3update/types"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func HandleRequest(ctx context.Context, event LambdaEvent) error {
+func HandleRequest(ctx context.Context, event types.LambdaEvent) error {
 	log.Printf("Hello %+v!", event)
 	if len(event.Records) == 0 {
 		log.Fatalf("no records")
@@ -26,16 +26,15 @@ func HandleRequest(ctx context.Context, event LambdaEvent) error {
 	athenaClient := athena.NewFromConfig(cfg)
 	s3Client := s3.NewFromConfig(cfg)
 	for _, record := range event.Records {
-		content, err := GetObject(ctx, s3Client, record.S3.Bucket.Name, record.S3.Object.Key)
-		strContent := ""
-		if err == nil {
-			strContent = string(content)
-		} else if err.Error() != "contentLength is 0" {
-			log.Fatalf("unable to get %s object, %v", record.S3.Object.Key, err)
-		}
-
+		log.Printf("key: %s", record.S3.Object.Key)
 		if strings.HasPrefix(record.S3.Object.Key, "queries/") {
-			err = StartQueryExecution(ctx, athenaClient, s3Client, record, strContent)
+			content, err := GetObject(ctx, s3Client, record.S3.Bucket.Name, record.S3.Object.Key)
+			if err != nil {
+				log.Fatalf("unable to get %s object, %v", record.S3.Object.Key, err)
+			}
+
+			strContent := string(content)
+			err = StartQueryExecution(ctx, athenaClient, s3Client, record.S3, strContent)
 			if err != nil {
 				log.Fatalf("unable to start query, %v", err)
 			}
@@ -43,22 +42,28 @@ func HandleRequest(ctx context.Context, event LambdaEvent) error {
 			continue
 		}
 
-		if strings.HasPrefix(record.S3.Object.Key, "results/") && strings.HasSuffix(record.S3.Object.Key, ".txt") {
-			if strContent == "" {
-				queryStartKey := strings.Split(record.S3.Object.Key, "/")[1]
-				queryStartKey = fmt.Sprintf("query_start/%s", queryStartKey)
-				content, err = GetObject(ctx, s3Client, record.S3.Bucket.Name, queryStartKey)
+		if strings.HasPrefix(record.S3.Object.Key, "results/") {
+			if strings.HasSuffix(record.S3.Object.Key, ".txt") {
+				content, err := GetObject(ctx, s3Client, record.S3.Bucket.Name, record.S3.Object.Key)
 				if err != nil {
-					log.Fatalf("unable to get %s object, %v", queryStartKey, err)
+					log.Fatalf("unable to get %s object, %v", record.S3.Object.Key, err)
 				}
 
-				queryKey := string(content)
-				queryKey = strings.Split(queryKey, "\n")[0]
-				if queryKey == "queries/create_ccindex.athena" {
-					err = StartRepairTable(ctx, s3Client, record.S3.Bucket.Name)
+				strContent := string(content)
+				if strContent == "" {
+					err = StartRepairTable(ctx, s3Client, record)
 					if err != nil {
-						log.Fatalf("unable to start query, %v", err)
+						log.Fatalf("unable to start repair table, %v", err)
 					}
+				}
+
+				continue
+			}
+
+			if strings.HasSuffix(record.S3.Object.Key, ".csv") {
+				err = DownloadWarc(ctx, s3Client, record.S3)
+				if err != nil {
+					log.Fatalf("unable to download warc, %v", err)
 				}
 			}
 
