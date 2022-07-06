@@ -7,6 +7,13 @@ which contains petabytes of billions of webpages in 40+ languages.
 This project was designed to run for free on us-east-1 where
 the data is located.
 
+# requirements
+
+* Linux (also works from [AWS](https://aws.amazon.com/cloudshell/)/[Google](https://shell.cloud.google.com/?show=ide%2Cterminal) Cloud Shell)
+* [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+* [Go programming language](https://go.dev/doc/install)
+* [~/.aws/credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+
 # development
 
 1. run `deploy.sh dev`
