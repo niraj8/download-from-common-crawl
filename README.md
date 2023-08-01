@@ -17,6 +17,8 @@ cp .env.example .env
 ```
 
 - update the values in the .env file
+- configure aws credentials
+- [Optional] `export AWS_PROFILE=your_profile`, if you have multiple profiles
 
 ## run the script
 
