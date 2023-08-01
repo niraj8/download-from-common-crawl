@@ -7,6 +7,7 @@ from constants import S3_RESULTS_BUCKET_NAME, AWS_REGION
 
 from query_results import get_uncompressed_warc_file_content_from_s3_key, query_results
 
+
 def main():
     print("Using S3 bucket for results:", S3_RESULTS_BUCKET_NAME)
     athena = Athena(boto3.client("athena", region_name=AWS_REGION))
@@ -39,5 +40,6 @@ def main():
             )
             # TODO do something with warc_file_content
             print(warc_file_content)
+
 
 main()
