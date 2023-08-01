@@ -8,23 +8,8 @@ fi
 
 echo -e "\n+++++ Starting deployment +++++\n"
 
-rm -rf ./bin
-mkdir ./bin
-mkdir ./bin/s3update
-
-echo "+++++ build go packages +++++"
-
-cd golang/s3update
-go get
-env GOOS=linux GOARCH=amd64 go build -o ../../bin/s3update/s3update
-if [ $? -ne 0 ]
-then
-    echo "build s3update packages failed"
-    exit 1
-fi
-
 echo "+++++ apply terraform +++++"
-cd ../../terraform
+cd terraform
 terraform init
 if [ $? -ne 0 ]
 then

@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
 }
 
 resource "random_pet" "one" {
@@ -17,15 +17,4 @@ resource "random_pet" "one" {
 
 resource "random_pet" "two" {
   length = 1
-}
-
-module "s3update_function" {
-  source = "./modules/function"
-
-  function_name  = "${terraform.workspace}_s3update_${random_pet.one.id}_${random_pet.two.id}"
-  lambda_handler = "s3update"
-  source_dir     = "../bin/s3update"
-  tags = {
-    environment = terraform.workspace
-  }
 }
