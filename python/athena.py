@@ -42,6 +42,7 @@ class Athena:
         self.client = client
 
     def execute_query(self, query_string, output_location):
+        print(query_string)
         query_response = self.client.start_query_execution(
             QueryString=query_string,
             ResultConfiguration={"OutputLocation": output_location},
@@ -75,3 +76,15 @@ class Athena:
             time.sleep(2)
 
         return query_status
+
+    def repair_table(self, output_location):
+        response = self.client.start_query_execution(
+            QueryString="MSCK REPAIR TABLE ccindex",
+            ResultConfiguration={"OutputLocation": output_location},
+        )
+
+        if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+            raise RuntimeError("Error running query", response)
+
+        query_execution_id = response["QueryExecutionId"]
+        return query_execution_id
